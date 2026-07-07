@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(npm install)",
+      "PowerShell($candidates = @\\(\"$env:ProgramFiles\\\\nodejs\\\\node.exe\", \"${env:ProgramFiles\\(x86\\)}\\\\nodejs\\\\node.exe\", \"$env:LOCALAPPDATA\\\\Programs\\\\nodejs\\\\node.exe\", \"$env:APPDATA\\\\nvm\"\\); foreach \\($c in $candidates\\) { if \\(Test-Path $c\\) { Write-Output \"FOUND: $c\" } }; try { \\(Get-Command node -ErrorAction Stop\\).Source } catch { Write-Output \"node not in PATH\" })",
+      "Bash(command -v node npm)",
+      "Read(//c/Program Files/**)",
+      "Read(//c/Users/letel/scoop/**)",
+      "Read(//c/ProgramData/chocolatey/**)",
+      "PowerShell(winget install OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements --silent)",
+      "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;$env:APPDATA\\\\npm;$env:Path\"; node --version; npm install)",
+      "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;$env:APPDATA\\\\npm;$env:Path\"; npm install zustand @anthropic-ai/sdk)",
+      "Skill(claude-api)",
+      "Skill(claude-api:*)",
+      "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;$env:APPDATA\\\\npm;$env:Path\"; npx tsc --noEmit 2>&1 | Select-Object -First 40)",
+      "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;$env:APPDATA\\\\npm;$env:Path\"; npm install sucrase)",
+      "PowerShell($content = [System.IO.File]::ReadAllText\\(\"C:\\\\Users\\\\letel\\\\Desktop\\\\Claude.tableton\\\\lib\\\\export\\\\csv.ts\"\\); $idx = $content.IndexOf\\('UTF8_BOM = \"'\\); $char = $content[$idx + 12]; \"Char code at BOM literal: \" + [int][char]$char)",
+      "PowerShell($path = \"C:\\\\Users\\\\letel\\\\Desktop\\\\Claude.tableton\\\\lib\\\\export\\\\csv.ts\"; $content = [System.IO.File]::ReadAllText\\($path\\); $content = $content.Replace\\('const UTF8_BOM = \"' + [char]0xFEFF + '\";', 'const UTF8_BOM = \"﻿\";'\\); [System.IO.File]::WriteAllText\\($path, $content, \\(New-Object System.Text.UTF8Encoding\\($false\\)\\)\\); Select-String -Path $path -Pattern \"UTF8_BOM =\" | Select-Object -First 1 -ExpandProperty Line)",
+      "PowerShell($path = \"C:\\\\Users\\\\letel\\\\Desktop\\\\Claude.tableton\\\\lib\\\\export\\\\csv.ts\"; $content = [System.IO.File]::ReadAllText\\($path\\); $fixed = $content -replace [regex]::Escape\\('const UTF8_BOM = \"'\\) + [char]0xFEFF + '\";', 'const UTF8_BOM = \"﻿\";'; [System.IO.File]::WriteAllText\\($path, $fixed, \\(New-Object System.Text.UTF8Encoding\\($false\\)\\)\\); \\(Select-String -Path $path -Pattern \"UTF8_BOM\"\\).Line)",
+      "PowerShell($path = \"C:\\\\Users\\\\letel\\\\Desktop\\\\Claude.tableton\\\\lib\\\\export\\\\csv.ts\"; $content = [System.IO.File]::ReadAllText\\($path\\); $old = 'const UTF8_BOM = \"' + [char]0xFEFF + '\";'; $new = 'const UTF8_BOM = \"﻿\";'; $content = $content.Replace\\($old, $new\\); [System.IO.File]::WriteAllText\\($path, $content, \\(New-Object System.Text.UTF8Encoding\\($false\\)\\)\\); \\(Select-String -Path $path -Pattern \"FEFF\"\\).Line)",
+      "PowerShell($path = \"C:\\\\Users\\\\letel\\\\Desktop\\\\Claude.tableton\\\\lib\\\\export\\\\csv.ts\"; $content = [System.IO.File]::ReadAllText\\($path\\); $old = 'const UTF8_BOM = \"' + [char]0xFEFF + '\";'; $new = 'const UTF8_BOM = \"' + [char]92 + 'uFEFF\";'; $content = $content.Replace\\($old, $new\\); [System.IO.File]::WriteAllText\\($path, $content, \\(New-Object System.Text.UTF8Encoding\\($false\\)\\)\\); \\(Select-String -Path $path -Pattern \"uFEFF\"\\).Line)",
+      "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;$env:APPDATA\\\\npm;$env:Path\"; npx tsc --noEmit 2>&1 | Select-Object -First 30)",
+      "PowerShell($list = Invoke-RestMethod -Uri \"https://wandbox.org/api/list.json\" -TimeoutSec 20; $wanted = @\\(\"C\",\"C++\",\"Java\",\"Rust\",\"Go\",\"PHP\",\"Ruby\"\\); foreach \\($lang in $wanted\\) { $first = $list | Where-Object { $_.language -eq $lang } | Select-Object -First 1; \"$lang -> $\\($first.name\\)\" })",
+      "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;$env:APPDATA\\\\npm;$env:Path\"; npx tsc --noEmit 2>&1 | Select-Object -First 20; if \\($LASTEXITCODE -eq 0\\) { \"TYPECHECK OK\" })",
+      "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;$env:APPDATA\\\\npm;$env:Path\"; npm install prisma @prisma/client next-auth@beta bcryptjs; npm install -D @types/bcryptjs tsx)",
+      "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;$env:APPDATA\\\\npm;$env:Path\"; Set-Location \"C:\\\\Users\\\\letel\\\\Desktop\\\\Claude.tableton\"; npx prisma migrate dev --name init 2>&1 | Select-Object -Last 25)",
+      "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;$env:APPDATA\\\\npm;$env:Path\"; Set-Location \"C:\\\\Users\\\\letel\\\\Desktop\\\\Claude.tableton\"; npm install prisma@6 @prisma/client@6 2>&1 | Select-Object -Last 5)",
+      "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;$env:APPDATA\\\\npm;$env:Path\"; Set-Location \"C:\\\\Users\\\\letel\\\\Desktop\\\\Claude.tableton\"; npx prisma migrate dev --name init 2>&1 | Select-Object -Last 15)",
+      "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;$env:APPDATA\\\\npm;$env:Path\"; Set-Location \"C:\\\\Users\\\\letel\\\\Desktop\\\\Claude.tableton\"; npx prisma db seed 2>&1 | Select-Object -Last 5)",
+      "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;$env:APPDATA\\\\npm;$env:Path\"; Set-Location \"C:\\\\Users\\\\letel\\\\Desktop\\\\Claude.tableton\"; npx tsc --noEmit 2>&1 | Select-Object -First 30)",
+      "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;$env:APPDATA\\\\npm;$env:Path\"; Set-Location \"C:\\\\Users\\\\letel\\\\Desktop\\\\Claude.tableton\"; npx tsc --noEmit 2>&1 | Select-Object -First 20; if \\($LASTEXITCODE -eq 0\\) { \"TYPECHECK OK\" })",
+      "PowerShell($env:Path = \"$env:ProgramFiles\\\\nodejs;$env:APPDATA\\\\npm;$env:Path\"; Set-Location \"C:\\\\Users\\\\letel\\\\Desktop\\\\Claude.tableton\"; npm run build 2>&1 | Select-Object -Last 35)"
+    ]
+  }
+}

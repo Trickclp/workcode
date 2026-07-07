@@ -1,0 +1,17 @@
+# Dependencias y build
+node_modules/
+.next/
+out/
+
+# Entorno y secretos
+.env
+.env.local
+.env*.local
+
+# Base de datos local (SQLite)
+prisma/dev.db
+prisma/dev.db-journal
+
+# Sistema
+.DS_Store
+Thumbs.db

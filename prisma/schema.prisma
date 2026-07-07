@@ -1,0 +1,68 @@
+// Esquema de base de datos de Work.Code.
+//
+// Desarrollo: SQLite (archivo prisma/dev.db, cero configuración).
+// Producción: cambia provider a "postgresql" y DATABASE_URL al de tu
+// Postgres (Vercel Postgres, Supabase, Neon...) — el resto no cambia.
+//
+// Los campos *Json guardan estructuras (casos de prueba, escala,
+// política de atraso, resultados) serializadas; los mappers de
+// lib/server/work.ts las convierten al shape del cliente.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String?
+  role         String? // "alumno" | "profesor" | null (Google sin onboarding)
+  provider     String   @default("password")
+  createdAt    DateTime @default(now())
+}
+
+model ClassRoom {
+  id           String       @id @default(cuid())
+  name         String
+  code         String       @unique
+  teacherEmail String
+  studentsJson String       @default("[]")
+  assignments  Assignment[]
+}
+
+model Assignment {
+  id             String       @id @default(cuid())
+  classId        String
+  class          ClassRoom    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  title          String
+  instructions   String
+  language       String
+  testCasesJson  String       @default("[]")
+  dueDate        String
+  scaleJson      String
+  weight         Int
+  latePolicyJson String
+  submissions    Submission[]
+}
+
+model Submission {
+  id             String     @id @default(cuid())
+  assignmentId   String
+  assignment     Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  studentEmail   String
+  code           String
+  passed         Int
+  total          Int
+  score          Float?
+  status         String     @default("auto")
+  isLate         Boolean    @default(false)
+  penaltyApplied Int        @default(0)
+  submittedAt    DateTime   @default(now())
+  outcomesJson   String     @default("[]")
+}
