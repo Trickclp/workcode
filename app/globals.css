@@ -279,10 +279,26 @@ a {
 }
 
 .sidebar-logo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   font-size: 19px;
   font-weight: 700;
   padding: 0 10px 16px;
 }
+
+.sidebar-close {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+/* Barra superior móvil (oculta en escritorio) */
+.mobile-topbar { display: none; }
 
 .sidebar-section {
   font-size: 10px;
@@ -1008,3 +1024,138 @@ a {
 .console-line.stdout { color: var(--text); }
 .console-line.stderr { color: var(--red); }
 .console-line.system { color: var(--text-dim); font-style: italic; }
+
+/* ══════════════════════════════════════════════════════════
+   MÓVIL (≤ 900px): menú hamburguesa + layouts apilados
+   ══════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  /* Shell: barra superior + contenido; el sidebar flota */
+  .shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: 50px 1fr;
+  }
+
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 12px;
+    background: var(--bg-sidebar);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hamburger {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .hamburger span {
+    width: 21px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 2px;
+  }
+
+  /* Sidebar como panel deslizante */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 272px;
+    max-width: 84vw;
+    z-index: 60;
+    transform: translateX(-105%);
+    transition: transform 0.22s ease;
+    box-shadow: 4px 0 26px #000c;
+  }
+  .sidebar.open { transform: translateX(0); }
+
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: #000a;
+    z-index: 55;
+  }
+
+  .sidebar-close { display: block; }
+
+  /* Táctil: sin hover — acciones del árbol siempre visibles */
+  .tree-actions { visibility: visible; }
+
+  /* Páginas de contenido */
+  .page { padding: 18px 14px; }
+  .page-header-row { flex-direction: column; align-items: stretch; gap: 10px; }
+  .metrics-title { flex-wrap: wrap; gap: 6px; }
+  .metrics-stats { flex-wrap: wrap; }
+  .inline-form { flex-wrap: wrap; }
+  .join-section { align-items: stretch; flex-direction: column; }
+
+  /* Formularios */
+  .form-row { flex-wrap: wrap; }
+  .form-row label { min-width: 130px; }
+  .case-row { grid-template-columns: 1fr; }
+  .case-delete { margin-top: 0; justify-self: end; }
+  .example-case { grid-template-columns: 1fr; }
+  .check-label { margin-top: 4px; }
+
+  /* Tablas con scroll horizontal */
+  .data-table { display: block; overflow-x: auto; white-space: nowrap; max-width: 100%; }
+
+  /* Auth */
+  .auth-card { padding: 28px 20px; }
+  .auth-card.wide { width: 420px; }
+  .role-grid { grid-template-columns: 1fr; }
+
+  /* Editor: instrucciones arriba, editor al centro, consola abajo */
+  .ws { grid-template-rows: auto minmax(0, 1fr) 190px; }
+  .ws-toolbar { flex-wrap: wrap; gap: 6px; padding: 6px 10px; min-height: 46px; }
+  .ws-actions { flex-wrap: wrap; gap: 6px; }
+  .ws-body { flex-direction: column; overflow-y: auto; }
+  .ws-side {
+    width: 100%;
+    max-height: 36vh;
+    flex-shrink: 0;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .ws-editor { flex: 1 0 300px; min-height: 300px; }
+  .debugger {
+    width: 100%;
+    max-height: 42vh;
+    flex-shrink: 0;
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
+  .ws-bottom.with-tutor { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; }
+  .tutor-card { border-left: none; border-top: 1px solid #7c3aed55; max-height: 38vh; }
+
+  /* Traductor Pseudo→Python: paneles apilados */
+  .panels { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+  .panel { border-right: none; border-bottom: 1px solid var(--border); }
+  .panel:last-child { border-bottom: none; }
+  .workbench { grid-template-rows: auto 1fr 190px; }
+  .toolbar { flex-wrap: wrap; padding: 6px 12px; gap: 6px; }
+
+  /* Projects: explorador compacto arriba, editor abajo */
+  .projects { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
+  .explorer {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    max-height: 190px;
+  }
+
+  /* Editor-page header */
+  .editor-page-header { flex-wrap: wrap; row-gap: 4px; }
+}
+
+/* Pantallas muy pequeñas */
+@media (max-width: 420px) {
+  .lang-grid, .card-grid { grid-template-columns: 1fr; }
+  .ws-lang { font-size: 11.5px; }
+  .btn { padding: 6px 12px; }
+}

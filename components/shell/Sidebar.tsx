@@ -25,7 +25,13 @@ const WORK_ITEMS: Record<Role, NavItem[]> = {
   ],
 };
 
-export function Sidebar() {
+interface SidebarProps {
+  /** true en móvil cuando el panel deslizante está abierto. */
+  open?: boolean;
+  onClose?: () => void;
+}
+
+export function Sidebar({ open = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
   if (!user || !user.role) return null;
@@ -37,6 +43,7 @@ export function Sidebar() {
     <Link
       key={nav.href}
       href={nav.href}
+      onClick={onClose}
       className={`nav-item${sub ? " sub" : ""}${isActive(nav.href) ? " active" : ""}`}
     >
       <span className="nav-icon">{nav.icon}</span>
@@ -45,9 +52,12 @@ export function Sidebar() {
   );
 
   return (
-    <nav className="sidebar">
+    <nav className={`sidebar${open ? " open" : ""}`}>
       <div className="sidebar-logo">
         <Logo size={28} />
+        <button className="sidebar-close" aria-label="Cerrar menú" onClick={onClose}>
+          ✕
+        </button>
       </div>
 
       <div className="sidebar-section">PRINCIPAL</div>
