@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 
 /**
  * AI Tutor con Claude (opcional).
@@ -45,6 +46,11 @@ const ADVICE_SCHEMA = {
 } as const;
 
 export async function POST(request: Request) {
+  // Solo usuarios autenticados: evita que terceros gasten los créditos de IA.
+  const session = await auth();
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: "No autenticado." }, { status: 401 });
+  }
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json(
       { error: "AI Tutor no configurado (falta ANTHROPIC_API_KEY)" },

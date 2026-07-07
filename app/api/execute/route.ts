@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 
 /**
  * Endpoint de ejecución remota de Work.Code (C, C++, Java, Rust, Go,
@@ -143,7 +144,16 @@ async function executePiston(
 
 // ── Handler ────────────────────────────────────────────────────────
 
+const MAX_CODE_BYTES = 100_000; // ~100 KB: evita abuso como relay de cómputo
+const MAX_STDIN_BYTES = 50_000;
+
 export async function POST(request: Request) {
+  // Solo usuarios autenticados: el motor remoto no es un servicio público.
+  const session = await auth();
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: "No autenticado." }, { status: 401 });
+  }
+
   let body: { language?: string; code?: string; stdin?: string };
   try {
     body = await request.json();
@@ -154,6 +164,9 @@ export async function POST(request: Request) {
   const { language, code, stdin } = body;
   if (!language || typeof code !== "string") {
     return NextResponse.json({ error: "Faltan language o code." }, { status: 400 });
+  }
+  if (code.length > MAX_CODE_BYTES || (stdin?.length ?? 0) > MAX_STDIN_BYTES) {
+    return NextResponse.json({ error: "El código o la entrada exceden el límite permitido." }, { status: 413 });
   }
 
   try {
