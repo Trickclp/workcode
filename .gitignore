@@ -16,3 +16,4 @@ prisma/dev.db-journal
 .DS_Store
 Thumbs.db
 tsconfig.tsbuildinfo
+.claude/settings.local.json
