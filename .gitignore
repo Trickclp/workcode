@@ -17,3 +17,6 @@ prisma/dev.db-journal
 Thumbs.db
 tsconfig.tsbuildinfo
 .claude/settings.local.json
+
+.vercel
+.env*

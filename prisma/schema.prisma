@@ -1,8 +1,9 @@
 // Esquema de base de datos de Work.Code.
 //
-// Desarrollo: SQLite (archivo prisma/dev.db, cero configuración).
-// Producción: cambia provider a "postgresql" y DATABASE_URL al de tu
-// Postgres (Vercel Postgres, Supabase, Neon...) — el resto no cambia.
+// Base de datos: Neon Postgres (la misma en desarrollo y producción,
+// conectada vía Vercel Marketplace). DATABASE_URL es la conexión
+// pooled para runtime; DATABASE_URL_UNPOOLED es la directa que usan
+// las migraciones (requisito de Prisma con poolers como pgbouncer).
 //
 // Los campos *Json guardan estructuras (casos de prueba, escala,
 // política de atraso, resultados) serializadas; los mappers de
@@ -13,8 +14,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 model User {

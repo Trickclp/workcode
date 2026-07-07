@@ -1,0 +1,5 @@
+# Nunca subir secretos ni bases locales al build de Vercel
+.env
+.env.local
+prisma/dev.db
+prisma/dev.db-journal
