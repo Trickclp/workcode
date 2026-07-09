@@ -2,7 +2,9 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Logo } from "@/components/shell/Logo";
+import { MobileTabs } from "@/components/shell/MobileTabs";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { useAuth } from "@/lib/auth/store";
 import { useWork } from "@/lib/state/work";
@@ -53,13 +55,17 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
           <span />
           <span />
         </button>
-        <Logo size={24} />
+        <Link href="/" aria-label="Página principal">
+          <Logo size={24} />
+        </Link>
       </header>
 
       {menuOpen && <div className="sidebar-backdrop" onClick={() => setMenuOpen(false)} />}
       <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
 
       <main className="shell-main">{children}</main>
+
+      <MobileTabs onMenu={() => setMenuOpen(true)} />
     </div>
   );
 }

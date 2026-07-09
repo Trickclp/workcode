@@ -54,7 +54,9 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
   return (
     <nav className={`sidebar${open ? " open" : ""}`}>
       <div className="sidebar-logo">
-        <Logo size={28} />
+        <Link href="/" aria-label="Página principal" onClick={onClose}>
+          <Logo size={28} />
+        </Link>
         <button className="sidebar-close" aria-label="Cerrar menú" onClick={onClose}>
           ✕
         </button>

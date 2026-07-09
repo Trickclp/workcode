@@ -39,7 +39,8 @@ export function useAuth() {
     hydrated: status !== "loading",
 
     signInWithGoogle: () => {
-      void signIn("google", { callbackUrl: "/" });
+      // El guardia del shell manda a /onboarding si aún no hay rol.
+      void signIn("google", { callbackUrl: "/playground" });
     },
 
     /** Devuelve mensaje de error o null si el login fue exitoso. */

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/shell/Logo";
@@ -33,6 +34,11 @@ export default function LoginPage() {
     router.replace(user.role ? "/playground" : "/onboarding");
   }, [hydrated, user, router]);
 
+  // /login#registro (desde la página principal) abre directo "Crear cuenta".
+  useEffect(() => {
+    if (window.location.hash === "#registro") setMode("register");
+  }, []);
+
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,7 +56,9 @@ export default function LoginPage() {
     <div className="auth-screen">
       <div className="auth-card">
         <div className="auth-brand">
-          <Logo size={42} />
+          <Link href="/" aria-label="Página principal">
+            <Logo size={42} />
+          </Link>
         </div>
         <p className="auth-tagline">
           La plataforma universitaria donde escribes, ejecutas y entregas código.

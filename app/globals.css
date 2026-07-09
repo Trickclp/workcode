@@ -1159,3 +1159,172 @@ a {
   .ws-lang { font-size: 11.5px; }
   .btn { padding: 6px 12px; }
 }
+
+/* ══════════════════════════════════════════════════════════
+   PÁGINA PRINCIPAL (landing pública)
+   ══════════════════════════════════════════════════════════ */
+.landing {
+  height: 100vh;
+  overflow-y: auto;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, #1e3a5c55 0%, transparent 60%),
+    var(--bg);
+}
+
+.landing-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 6vw;
+  position: sticky;
+  top: 0;
+  background: #1e1e1ee6;
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #ffffff0d;
+  z-index: 10;
+}
+.landing-nav { display: flex; gap: 10px; }
+
+.landing-hero {
+  text-align: center;
+  padding: 72px 6vw 40px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+.landing-hero h1 {
+  font-size: clamp(30px, 5.5vw, 52px);
+  line-height: 1.12;
+  letter-spacing: -0.5px;
+}
+.landing-hero h1 span { color: var(--green); }
+.landing-hero p {
+  color: #b8b8b8;
+  font-size: clamp(14px, 2.2vw, 17px);
+  line-height: 1.65;
+  margin: 20px auto 30px;
+  max-width: 640px;
+}
+.landing-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.btn.big { padding: 12px 26px; font-size: 15px; border-radius: 6px; }
+
+.landing-langs {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 44px;
+  font-family: Consolas, monospace;
+  font-weight: 700;
+  font-size: 15px;
+  opacity: 0.9;
+}
+
+.landing-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  padding: 30px 6vw 10px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.landing-feature {
+  background: #ffffff06;
+  border: 1px solid #ffffff10;
+  border-radius: 10px;
+  padding: 22px 20px;
+}
+.feature-icon { font-size: 26px; margin-bottom: 10px; }
+.landing-feature h3 { font-size: 15px; margin-bottom: 7px; }
+.landing-feature p { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+
+.landing-steps { text-align: center; padding: 56px 6vw 30px; }
+.landing-steps h2 { font-size: 24px; margin-bottom: 26px; }
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.landing-step { padding: 10px; }
+.step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4ec9b0, #0e639c);
+  color: #fff;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 12px;
+}
+.landing-step h3 { font-size: 15px; margin-bottom: 6px; }
+.landing-step p { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+
+.landing-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 36px 6vw 46px;
+  color: var(--text-dim);
+  font-size: 12.5px;
+  border-top: 1px solid #ffffff0d;
+  margin-top: 40px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   MODO CELULAR: pestañas inferiores + confort táctil
+   ══════════════════════════════════════════════════════════ */
+.mobile-tabs { display: none; }
+
+@media (max-width: 900px) {
+  .mobile-tabs {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background: #161616f5;
+    backdrop-filter: blur(8px);
+    border-top: 1px solid var(--border);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .mobile-tabs a,
+  .mobile-tabs button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 8px 4px 9px;
+    font-size: 10.5px;
+    color: var(--text-dim);
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  .mobile-tabs .active { color: var(--green); }
+  .mobile-tabs .tab-icon { font-size: 19px; }
+
+  /* Deja espacio para las pestañas inferiores */
+  .shell-main { padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
+
+  /* Confort táctil: 16px evita el zoom automático de iOS al enfocar */
+  .input, .auth-form input, .stdin-panel textarea { font-size: 16px; }
+  .nav-item { padding: 12px 10px; font-size: 15px; }
+  .nav-item.sub { padding: 10px 10px; font-size: 13.5px; }
+  .btn { min-height: 38px; }
+  .icon-button { padding: 6px 8px; font-size: 14px; }
+
+  /* Landing en celular */
+  .landing-hero { padding-top: 44px; }
+  .landing-header { padding: 12px 16px; }
+  .landing-nav .btn { padding: 8px 12px; font-size: 12.5px; }
+}
+
+@media (max-width: 480px) {
+  /* En el header de la landing solo cabe el isotipo */
+  .landing-header .brand-name { display: none; }
+}
