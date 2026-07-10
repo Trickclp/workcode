@@ -1328,3 +1328,160 @@ a {
   /* En el header de la landing solo cabe el isotipo */
   .landing-header .brand-name { display: none; }
 }
+
+/* ══════════════════════════════════════════════════════════
+   TEMA CLARO
+   ══════════════════════════════════════════════════════════ */
+:root[data-theme="light"] {
+  --bg: #f4f5f7;
+  --bg-panel: #ffffff;
+  --bg-toolbar: #e8eaed;
+  --bg-sidebar: #ffffff;
+  --border: #d5d8dc;
+  --text: #1f2328;
+  --text-dim: #656d76;
+  --accent: #0e639c;
+  --accent-hover: #1177bb;
+  --green: #1a7f64;
+  --red: #c0392b;
+  --yellow: #9a7d0a;
+}
+:root[data-theme="light"] body { background: var(--bg); color: var(--text); }
+:root[data-theme="light"] .nav-item.active { background: #0e639c; color: #fff; }
+:root[data-theme="light"] .nav-item:hover { background: #00000008; }
+:root[data-theme="light"] .btn.ghost:hover:not(:disabled) { background: #00000008; }
+:root[data-theme="light"] .console,
+:root[data-theme="light"] .console-body { background: #fbfbfc; color: var(--text); }
+:root[data-theme="light"] .input { background: #fff; border-color: #cfd3d8; }
+:root[data-theme="light"] .landing { background: linear-gradient(180deg, #eef4fb 0%, var(--bg) 60%); }
+:root[data-theme="light"] .landing-header { background: #ffffffe6; }
+:root[data-theme="light"] .landing-feature { background: #fff; border-color: var(--border); }
+:root[data-theme="light"] .mobile-topbar,
+:root[data-theme="light"] .mobile-tabs { background: #fffffff2; }
+:root[data-theme="light"] .stdin-panel { background: #eef4fb; border-color: #cfe0ef; }
+:root[data-theme="light"] .example-case pre,
+:root[data-theme="light"] .eval-detail pre,
+:root[data-theme="light"] .code-details pre { background: #f0f1f3; }
+:root[data-theme="light"] .auth-screen { background: radial-gradient(ellipse at top, #dceaf6 0%, var(--bg) 55%); }
+
+/* ══════════════════════════════════════════════════════════
+   ARREGLO EDITOR EN MÓVIL: barra de acciones SIEMPRE visible
+   (antes se cortaba al enfocar el editor y aparecer el teclado)
+   ══════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .ws {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+  /* La barra de acciones queda fija arriba y no se desplaza nunca */
+  .ws-toolbar {
+    flex: none;
+    position: sticky;
+    top: 0;
+    z-index: 6;
+  }
+  .ws-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  /* Monaco con altura acotada: desplaza su contenido internamente,
+     sin empujar la página ni ocultar la barra de acciones */
+  .ws-editor { flex: none; height: 58vh; min-height: 260px; }
+  .ws-side { max-height: none; flex: none; }
+  .ws-bottom { flex: none; }
+  .editor-page { height: 100%; overflow: hidden; }
+}
+
+/* ══════════════════════════════════════════════════════════
+   Componentes nuevos: gestión de clases, gráficos, perfil, tema
+   ══════════════════════════════════════════════════════════ */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-size: 13.5px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+.theme-toggle:hover { background: #ffffff10; }
+:root[data-theme="light"] .theme-toggle:hover { background: #00000008; }
+
+.btn.ghost.danger, .icon-button.danger { color: var(--red); }
+.btn.ghost.danger:hover:not(:disabled) { background: #f4877118; }
+
+.user-row { text-decoration: none; }
+.user-row:hover .user-name { color: var(--green); }
+
+/* Gestión de clases (profesor) */
+.class-block {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+  max-width: 900px;
+}
+.class-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.class-head h3 { font-size: 16px; margin-bottom: 6px; }
+button.class-code { border: none; cursor: pointer; }
+.class-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 14px; }
+.class-col h4 { font-size: 12px; letter-spacing: 0.5px; color: var(--text-dim); margin-bottom: 8px; }
+.manage-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 5px;
+  font-size: 13px;
+}
+.manage-row:hover { background: #ffffff08; }
+:root[data-theme="light"] .manage-row:hover { background: #00000006; }
+.manage-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+a.manage-name { color: #6cb6e4; }
+.manage-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+/* Gráficos en Métricas */
+.metrics-chart-row { display: flex; flex-wrap: wrap; gap: 22px; margin: 8px 0 14px; }
+.chart-box { min-width: 240px; }
+.chart-title { font-size: 11px; letter-spacing: 0.5px; color: var(--text-dim); margin-bottom: 6px; }
+.chart-count { fill: var(--text-dim); font-size: 10px; }
+.chart-label { fill: var(--text-dim); font-size: 8px; }
+.pass-summary { padding-top: 6px; }
+.pass-bar { height: 12px; background: #f4877133; border-radius: 6px; overflow: hidden; }
+.pass-fill { height: 100%; background: var(--green); border-radius: 6px; }
+.pass-legend { display: flex; gap: 14px; align-items: center; font-size: 12px; margin-top: 8px; }
+.pass-legend .pass { color: var(--green); }
+.pass-legend .fail { color: var(--red); }
+
+.hint-server { color: var(--green); }
+
+/* Perfil */
+.profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; max-width: 760px; }
+.profile-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 20px;
+}
+.profile-card h3 { font-size: 15px; margin-bottom: 4px; }
+.profile-ok {
+  background: #4ec9b022;
+  color: var(--green);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 700px) {
+  .class-cols { grid-template-columns: 1fr; gap: 14px; }
+}

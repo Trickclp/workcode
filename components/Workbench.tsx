@@ -17,6 +17,7 @@ import {
   registerPseudocodeLanguage,
 } from "@/lib/monaco/pseudocode-language";
 import { usePyodide } from "@/lib/pyodide/usePyodide";
+import { useTheme } from "@/lib/theme";
 import { Console, ConsoleLine } from "./Console";
 
 const SAMPLE = `Proceso EjemploCompleto
@@ -53,6 +54,7 @@ const EDITOR_OPTIONS = {
 } as const;
 
 export default function Workbench() {
+  const monacoTheme = useTheme() === "light" ? "light" : "vs-dark";
   const [pseudocode, setPseudocode] = useState(SAMPLE);
   const [consoleLines, setConsoleLines] = useState<ConsoleLine[]>([]);
   const { status, runPython } = usePyodide();
@@ -135,7 +137,7 @@ export default function Workbench() {
           <div className="panel-title">PSEUDOCÓDIGO</div>
           <Editor
             language={PSEUDOCODE_LANGUAGE_ID}
-            theme="vs-dark"
+            theme={monacoTheme}
             value={pseudocode}
             beforeMount={handleBeforeMount}
             onMount={handleSourceMount}
@@ -156,7 +158,7 @@ export default function Workbench() {
           </div>
           <Editor
             language="python"
-            theme="vs-dark"
+            theme={monacoTheme}
             value={python}
             options={{ ...EDITOR_OPTIONS, readOnly: true }}
           />

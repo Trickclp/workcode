@@ -84,11 +84,19 @@ interface WorkState {
   fetchAll(): Promise<void>;
   createClass(name: string): Promise<void>;
   createAssignment(assignment: Omit<Assignment, "id">): Promise<string | null>;
-  addSubmission(submission: NewSubmission): Promise<void>;
+  updateAssignment(id: string, patch: Partial<Omit<Assignment, "id" | "classId">>): Promise<boolean>;
+  /** Envía SOLO el código; el servidor califica y devuelve la entrega ya evaluada. */
+  submitCode(assignmentId: string, code: string): Promise<Submission | null>;
   /** Inscripción del alumno con el código de clase. true si quedó inscrito. */
   joinClass(code: string): Promise<boolean>;
   /** Calificación manual del profesor para entregas pendientes. */
   gradeSubmission(id: string, score: number): Promise<void>;
+  /** Profesor: elimina una tarea y sus entregas. */
+  deleteAssignment(id: string): Promise<void>;
+  /** Profesor: quita a un alumno de una clase. */
+  removeStudent(classId: string, email: string): Promise<void>;
+  /** Profesor: elimina una clase completa. */
+  deleteClass(id: string): Promise<void>;
 }
 
 async function postJson<T>(url: string, body: unknown): Promise<T | null> {
@@ -141,9 +149,26 @@ export const useWork = create<WorkState>()((set, get) => ({
     return created.id;
   },
 
-  addSubmission: async (submission) => {
-    const created = await postJson<Submission>("/api/work/submissions", submission);
+  updateAssignment: async (id, patch) => {
+    const response = await fetch(`/api/work/assignments/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    });
+    if (!response.ok) {
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
+      window.alert(data?.error ?? "No se pudo actualizar la tarea.");
+      return false;
+    }
+    const updated = (await response.json()) as Assignment;
+    set((state) => ({ assignments: state.assignments.map((a) => (a.id === id ? updated : a)) }));
+    return true;
+  },
+
+  submitCode: async (assignmentId, code) => {
+    const created = await postJson<Submission>("/api/work/submissions", { assignmentId, code });
     if (created) set((state) => ({ submissions: [...state.submissions, created] }));
+    return created;
   },
 
   joinClass: async (code) => {
@@ -173,6 +198,47 @@ export const useWork = create<WorkState>()((set, get) => ({
     const updated = (await response.json()) as Submission;
     set((state) => ({
       submissions: state.submissions.map((s) => (s.id === id ? updated : s)),
+    }));
+  },
+
+  deleteAssignment: async (id) => {
+    const response = await fetch(`/api/work/assignments/${id}`, { method: "DELETE" });
+    if (!response.ok) {
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
+      window.alert(data?.error ?? "No se pudo eliminar la tarea.");
+      return;
+    }
+    set((state) => ({
+      assignments: state.assignments.filter((a) => a.id !== id),
+      submissions: state.submissions.filter((s) => s.assignmentId !== id),
+    }));
+  },
+
+  removeStudent: async (classId, email) => {
+    const response = await fetch(`/api/work/classes/${classId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ removeStudent: email }),
+    });
+    if (!response.ok) {
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
+      window.alert(data?.error ?? "No se pudo quitar al alumno.");
+      return;
+    }
+    const updated = (await response.json()) as ClassRoom;
+    set((state) => ({ classes: state.classes.map((c) => (c.id === classId ? updated : c)) }));
+  },
+
+  deleteClass: async (id) => {
+    const response = await fetch(`/api/work/classes/${id}`, { method: "DELETE" });
+    if (!response.ok) {
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
+      window.alert(data?.error ?? "No se pudo eliminar la clase.");
+      return;
+    }
+    set((state) => ({
+      classes: state.classes.filter((c) => c.id !== id),
+      assignments: state.assignments.filter((a) => a.classId !== id),
     }));
   },
 }));

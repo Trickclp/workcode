@@ -7,13 +7,14 @@
  */
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth/store";
 import { downloadCsv } from "@/lib/export/csv";
 import { formatScore, GradeScale, isPassing, SCALE_PRESETS } from "@/lib/grading";
 import { LANGUAGES, RuntimeId } from "@/lib/runtimes";
 import { Submission, TestCase, useWork } from "@/lib/state/work";
+import { ScoreChart } from "./ScoreChart";
 
 const STATUS_LABEL: Record<Submission["status"], string> = {
   auto: "Auto-evaluada",
@@ -58,38 +59,26 @@ function GradeForm({ submission, scale }: { submission: Submission; scale: Grade
 
 export function TeacherClasses() {
   const { user } = useAuth();
-  const { classes, assignments, createClass } = useWork();
+  const { classes, assignments, createClass, deleteClass, deleteAssignment, removeStudent } =
+    useWork();
   const [name, setName] = useState("");
 
   const myClasses = classes.filter((c) => c.teacherEmail === user?.email);
+
+  const copyCode = (code: string) => {
+    navigator.clipboard?.writeText(code).then(
+      () => window.alert(`Código "${code}" copiado. Compártelo con tus alumnos.`),
+      () => {}
+    );
+  };
 
   return (
     <div className="page">
       <h1>Mis Clases</h1>
       <p className="page-subtitle">
-        Comparte el código de clase con tus alumnos para que se unan.
+        Comparte el código con tus alumnos para que se unan. Aquí gestionas sus tareas y quién
+        está inscrito.
       </p>
-
-      <div className="card-grid">
-        {myClasses.map((cls) => (
-          <div key={cls.id} className="info-card">
-            <h3>{cls.name}</h3>
-            <div className="class-code">{cls.code}</div>
-            <div className="info-meta">
-              👥 {cls.students.length} alumno{cls.students.length !== 1 && "s"} · 📝{" "}
-              {assignments.filter((a) => a.classId === cls.id).length} tarea
-              {assignments.filter((a) => a.classId === cls.id).length !== 1 && "s"}
-            </div>
-            {cls.students.length > 0 && (
-              <ul className="student-list">
-                {cls.students.map((email) => (
-                  <li key={email}>{email}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-        ))}
-      </div>
 
       <form
         className="inline-form"
@@ -111,6 +100,90 @@ export function TeacherClasses() {
           + Crear clase
         </button>
       </form>
+
+      {myClasses.length === 0 && (
+        <div className="empty-note">Aún no has creado ninguna clase.</div>
+      )}
+
+      {myClasses.map((cls) => {
+        const clsAssignments = assignments.filter((a) => a.classId === cls.id);
+        const students = cls.students.filter((e) => e !== cls.teacherEmail);
+        return (
+          <div key={cls.id} className="class-block">
+            <div className="class-head">
+              <div>
+                <h3>{cls.name}</h3>
+                <button className="class-code" onClick={() => copyCode(cls.code)} title="Copiar código">
+                  {cls.code} 📋
+                </button>
+              </div>
+              <button
+                className="btn ghost small danger"
+                onClick={() => {
+                  if (window.confirm(`¿Eliminar la clase "${cls.name}" con todas sus tareas y entregas? Esto no se puede deshacer.`))
+                    void deleteClass(cls.id);
+                }}
+              >
+                Eliminar clase
+              </button>
+            </div>
+
+            <div className="class-cols">
+              <div className="class-col">
+                <h4>Tareas ({clsAssignments.length})</h4>
+                {clsAssignments.length === 0 && <div className="empty-note">Sin tareas.</div>}
+                {clsAssignments.map((a) => (
+                  <div key={a.id} className="manage-row">
+                    <Link href={`/work/task/${a.id}`} className="manage-name">
+                      {a.title}
+                    </Link>
+                    <div className="manage-actions">
+                      <Link className="icon-button" href={`/work/create?edit=${a.id}`} title="Editar">
+                        ✎
+                      </Link>
+                      <button
+                        className="icon-button danger"
+                        title="Eliminar tarea"
+                        onClick={() => {
+                          if (window.confirm(`¿Eliminar la tarea "${a.title}" y sus entregas?`))
+                            void deleteAssignment(a.id);
+                        }}
+                      >
+                        🗑
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                <Link className="btn ghost small" href="/work/create">
+                  + Nueva tarea
+                </Link>
+              </div>
+
+              <div className="class-col">
+                <h4>Alumnos ({students.length})</h4>
+                {students.length === 0 && (
+                  <div className="empty-note">Nadie se ha unido aún.</div>
+                )}
+                {students.map((email) => (
+                  <div key={email} className="manage-row">
+                    <span className="manage-name">{email}</span>
+                    <button
+                      className="icon-button danger"
+                      title="Quitar de la clase"
+                      onClick={() => {
+                        if (window.confirm(`¿Quitar a ${email} de la clase?`))
+                          void removeStudent(cls.id, email);
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -120,27 +193,42 @@ export function TeacherClasses() {
 const EMPTY_CASE: TestCase = { input: "", expected: "" };
 
 export function TeacherCreate() {
+  return (
+    <Suspense fallback={<div className="app-loading">Cargando...</div>}>
+      <TeacherCreateInner />
+    </Suspense>
+  );
+}
+
+function TeacherCreateInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
   const { user } = useAuth();
-  const { classes, createAssignment } = useWork();
+  const { classes, assignments, createAssignment, updateAssignment } = useWork();
   const myClasses = classes.filter((c) => c.teacherEmail === user?.email);
 
-  const [classId, setClassId] = useState(myClasses[0]?.id ?? "");
-  const [title, setTitle] = useState("");
-  const [language, setLanguage] = useState<RuntimeId>("pseudocode");
-  const [dueDate, setDueDate] = useState("2026-07-31");
-  const [instructions, setInstructions] = useState("");
-  const [testCases, setTestCases] = useState<TestCase[]>([{ ...EMPTY_CASE }]);
+  // En modo edición, precarga los valores de la tarea existente.
+  const editing = editId ? assignments.find((a) => a.id === editId) : undefined;
+
+  const [classId, setClassId] = useState(editing?.classId ?? myClasses[0]?.id ?? "");
+  const [title, setTitle] = useState(editing?.title ?? "");
+  const [language, setLanguage] = useState<RuntimeId>(editing?.language ?? "pseudocode");
+  const [dueDate, setDueDate] = useState(editing?.dueDate ?? "2026-07-31");
+  const [instructions, setInstructions] = useState(editing?.instructions ?? "");
+  const [testCases, setTestCases] = useState<TestCase[]>(
+    editing && editing.testCases.length > 0 ? editing.testCases : [{ ...EMPTY_CASE }]
+  );
   const [created, setCreated] = useState<string | null>(null);
 
-  // Sistema de calificaciones personalizable.
   const [scalePreset, setScalePreset] = useState(SCALE_PRESETS[0].id);
-  const [customScale, setCustomScale] = useState<GradeScale>(SCALE_PRESETS[0].scale);
-  const [weight, setWeight] = useState(25);
+  const [customScale, setCustomScale] = useState<GradeScale>(
+    editing?.gradeScale ?? SCALE_PRESETS[0].scale
+  );
+  const [weight, setWeight] = useState(editing?.weight ?? 25);
 
-  // Política de entregas atrasadas.
-  const [acceptLate, setAcceptLate] = useState(true);
-  const [penaltyPercent, setPenaltyPercent] = useState(20);
+  const [acceptLate, setAcceptLate] = useState(editing?.latePolicy.acceptLate ?? true);
+  const [penaltyPercent, setPenaltyPercent] = useState(editing?.latePolicy.penaltyPercent ?? 20);
 
   const applyPreset = (id: string) => {
     setScalePreset(id);
@@ -171,8 +259,7 @@ export function TeacherCreate() {
       return;
     }
 
-    const id = await createAssignment({
-      classId,
+    const payload = {
       title: title.trim(),
       instructions,
       language,
@@ -181,24 +268,32 @@ export function TeacherCreate() {
       gradeScale: customScale,
       weight,
       latePolicy: { acceptLate, penaltyPercent: acceptLate ? penaltyPercent : 0 },
-    });
-    if (id) setCreated(id);
+    };
+
+    if (editing) {
+      const ok = await updateAssignment(editing.id, payload);
+      if (ok) setCreated(editing.id);
+    } else {
+      const id = await createAssignment({ classId, ...payload });
+      if (id) setCreated(id);
+    }
   };
 
   if (created) {
     return (
       <div className="page">
-        <h1>✅ Tarea publicada</h1>
+        <h1>{editing ? "✅ Tarea actualizada" : "✅ Tarea publicada"}</h1>
         <p className="page-subtitle">
-          Tus alumnos ya la verán en &quot;Tareas Pendientes&quot; con la escala y el plazo que
-          definiste.
+          {editing
+            ? "Los cambios ya están guardados."
+            : 'Tus alumnos ya la verán en "Tareas Pendientes" con la escala y el plazo que definiste.'}
         </p>
         <div className="inline-form">
           <Link className="btn primary" href={`/work/task/${created}`}>
-            Probarla como alumno →
+            Ver la tarea →
           </Link>
-          <button className="btn ghost" onClick={() => router.refresh()}>
-            Crear otra
+          <button className="btn ghost" onClick={() => router.push("/work/classes")}>
+            Volver a Mis Clases
           </button>
         </div>
       </div>
@@ -207,7 +302,7 @@ export function TeacherCreate() {
 
   return (
     <div className="page">
-      <h1>Crear Tarea</h1>
+      <h1>{editing ? "Editar Tarea" : "Crear Tarea"}</h1>
       <p className="page-subtitle">
         Define el problema, la escala de calificación, el plazo y (opcionalmente) los casos de
         prueba del auto-evaluador. Sin casos, la tarea queda en revisión manual con Entrada
@@ -218,7 +313,12 @@ export function TeacherCreate() {
         <div className="form-row">
           <label>
             Clase
-            <select className="input" value={classId} onChange={(e) => setClassId(e.target.value)}>
+            <select
+              className="input"
+              value={classId}
+              disabled={!!editing}
+              onChange={(e) => setClassId(e.target.value)}
+            >
               {myClasses.map((cls) => (
                 <option key={cls.id} value={cls.id}>
                   {cls.name}
@@ -410,7 +510,7 @@ export function TeacherCreate() {
         ))}
 
         <button className="btn primary" type="submit">
-          📝 Publicar tarea
+          {editing ? "💾 Guardar cambios" : "📝 Publicar tarea"}
         </button>
       </form>
     </div>
@@ -500,6 +600,42 @@ export function TeacherMetrics() {
               </span>
             </div>
           </div>
+          {subs.length > 0 && (
+            <div className="metrics-chart-row">
+              <div className="chart-box">
+                <div className="chart-title">Distribución de notas</div>
+                <ScoreChart
+                  scores={subs
+                    .filter((s) => s.score !== null)
+                    .map((s) => s.score as number)}
+                  scale={assignment.gradeScale}
+                />
+              </div>
+              <div className="chart-box">
+                <div className="chart-title">Aprobación</div>
+                {(() => {
+                  const graded = subs.filter((s) => s.score !== null);
+                  const passed = graded.filter((s) =>
+                    isPassing(s.score, assignment.gradeScale)
+                  ).length;
+                  const failed = graded.length - passed;
+                  const pct = graded.length ? Math.round((passed / graded.length) * 100) : 0;
+                  return (
+                    <div className="pass-summary">
+                      <div className="pass-bar">
+                        <div className="pass-fill" style={{ width: `${pct}%` }} />
+                      </div>
+                      <div className="pass-legend">
+                        <span className="pass">✓ {passed} aprueban</span>
+                        <span className="fail">✗ {failed} reprueban</span>
+                        <strong>{pct}%</strong>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
           {subs.length === 0 ? (
             <div className="empty-note">Sin entregas todavía.</div>
           ) : (

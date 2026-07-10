@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
+import { rateLimit } from "@/lib/server/ratelimit";
 
 /**
  * Autenticación real de Work.Code con NextAuth v5 (Auth.js).
@@ -29,6 +30,9 @@ const providers: NextAuthConfig["providers"] = [
       const email = String(credentials?.email ?? "").trim().toLowerCase();
       const password = String(credentials?.password ?? "");
       if (!email || !password) return null;
+
+      // Anti-fuerza-bruta: máx. 10 intentos por correo cada 5 minutos.
+      if (!rateLimit(`login:${email}`, 10, 300_000).allowed) return null;
 
       const user = await prisma.user.findUnique({ where: { email } });
       if (!user?.passwordHash) return null;
@@ -69,9 +73,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const dbUser = await prisma.user.findUnique({ where: { email: user.email } });
         token.role = dbUser?.role ?? null;
       }
-      // session.update({ role }) tras onboarding o Dev Toggle.
-      if (trigger === "update" && session?.role !== undefined) {
-        token.role = session.role;
+      // session.update(): re-sincroniza rol y nombre desde la base de
+      // datos (onboarding de rol, o cambio de nombre en el perfil).
+      if (trigger === "update") {
+        if (session?.role !== undefined) token.role = session.role;
+        if (token.email) {
+          const dbUser = await prisma.user.findUnique({ where: { email: token.email } });
+          if (dbUser) {
+            token.role = dbUser.role ?? token.role;
+            token.name = dbUser.name;
+          }
+        }
       }
       return token;
     },

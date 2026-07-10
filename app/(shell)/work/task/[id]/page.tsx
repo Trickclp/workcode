@@ -5,30 +5,24 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { EditorWorkspace } from "@/components/editor/EditorWorkspace";
 import { useAuth } from "@/lib/auth/store";
-import { EvaluationResult, evaluateSubmission } from "@/lib/evaluator/evaluate";
-import {
-  applyLatePenalty,
-  computeScore,
-  formatScore,
-  isLateNow,
-  isPassing,
-} from "@/lib/grading";
+import { formatScore, isLateNow, isPassing } from "@/lib/grading";
 import { getLanguage } from "@/lib/runtimes";
-import { useWork } from "@/lib/state/work";
+import { Submission, useWork } from "@/lib/state/work";
 
 /**
  * Vista de tarea del alumno.
  *
- * - Con casos de prueba: al entregar, el auto-evaluador ejecuta el código
- *   contra cada caso y asigna la nota en la escala configurada por el
- *   profesor, aplicando penalización si la entrega es atrasada.
+ * - Con casos de prueba: al entregar, el código viaja al servidor, que lo
+ *   ejecuta contra cada caso, calcula la nota (con la escala y la
+ *   penalización por atraso) y la devuelve. El navegador NO calcula la
+ *   nota: así no se puede falsear.
  * - Sin casos de prueba: se muestra el panel de Entrada Manual (stdin)
  *   y la entrega queda pendiente de revisión manual del profesor.
  */
 export default function TaskPage() {
   const params = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { assignments, classes, submissions, addSubmission } = useWork();
+  const { assignments, classes, submissions, submitCode } = useWork();
 
   const assignment = assignments.find((a) => a.id === params.id);
   const cls = classes.find((c) => c.id === assignment?.classId);
@@ -45,11 +39,7 @@ export default function TaskPage() {
   const [code, setCode] = useState("");
   const [ready, setReady] = useState(false);
   const [evaluating, setEvaluating] = useState(false);
-  const [result, setResult] = useState<
-    | { kind: "auto"; evaluation: EvaluationResult; score: number; isLate: boolean; penalty: number }
-    | { kind: "manual" }
-    | null
-  >(null);
+  const [result, setResult] = useState<Submission | null>(null);
 
   useEffect(() => {
     setCode(window.localStorage.getItem(draftKey) ?? "");
@@ -72,51 +62,11 @@ export default function TaskPage() {
     if (!assignment || !user || submissionBlocked) return;
     setEvaluating(true);
     setResult(null);
-
-    if (!hasCases) {
-      // Sin casos: entrega para revisión manual del profesor.
-      await addSubmission({
-        assignmentId: assignment.id,
-        code,
-        passed: 0,
-        total: 0,
-        score: null,
-        status: "pendiente",
-        isLate: late,
-        penaltyApplied: 0,
-        outcomes: [],
-      });
-      setResult({ kind: "manual" });
-      setEvaluating(false);
-      return;
-    }
-
-    const evaluation = await evaluateSubmission(
-      assignment.language,
-      code,
-      assignment.testCases
-    );
-
-    const baseScore = computeScore(evaluation.ratio, assignment.gradeScale);
-    const penalty = late ? assignment.latePolicy.penaltyPercent : 0;
-    const score = late
-      ? applyLatePenalty(baseScore, assignment.gradeScale, penalty)
-      : baseScore;
-
-    await addSubmission({
-      assignmentId: assignment.id,
-      code,
-      passed: evaluation.passed,
-      total: evaluation.total,
-      score,
-      status: "auto",
-      isLate: late,
-      penaltyApplied: penalty,
-      outcomes: evaluation.outcomes,
-    });
-    setResult({ kind: "auto", evaluation, score, isLate: late, penalty });
+    // El servidor califica (con casos) o registra pendiente (sin casos).
+    const created = await submitCode(assignment.id, code);
+    setResult(created);
     setEvaluating(false);
-  }, [assignment, user, code, hasCases, late, submissionBlocked, addSubmission]);
+  }, [assignment, user, code, submissionBlocked, submitCode]);
 
   if (!assignment) {
     return (
@@ -192,32 +142,33 @@ export default function TaskPage() {
         </p>
       )}
 
-      {result?.kind === "manual" && (
+      {result && result.status === "pendiente" && (
         <div className="eval-result">
           <h4>📤 Entrega registrada</h4>
           <p className="hint">
             Tu código quedó <strong>pendiente de revisión manual</strong> del profesor
-            {late ? " (marcada como atrasada)" : ""}. Puedes volver a entregar si lo mejoras.
+            {result.isLate ? " (marcada como atrasada)" : ""}. Puedes volver a entregar si lo
+            mejoras.
           </p>
         </div>
       )}
 
-      {result?.kind === "auto" && (
+      {result && result.status === "auto" && (
         <div className="eval-result">
           <h4>Resultado de la evaluación</h4>
           <div
             className={`eval-score ${isPassing(result.score, assignment.gradeScale) ? "pass" : "fail"}`}
           >
-            Nota: {formatScore(result.score)} — {result.evaluation.passed}/
-            {result.evaluation.total} casos correctos
+            Nota: {formatScore(result.score)} — {result.passed}/{result.total} casos correctos
           </div>
-          {result.isLate && (
+          <p className="hint hint-server">🔒 Calificado en el servidor de forma segura.</p>
+          {result.isLate && result.penaltyApplied > 0 && (
             <p className="hint">
-              ⏰ Entrega atrasada: se aplicó una penalización del {result.penalty}%.
+              ⏰ Entrega atrasada: se aplicó una penalización del {result.penaltyApplied}%.
             </p>
           )}
           <ul className="eval-cases">
-            {result.evaluation.outcomes.map((outcome, i) => (
+            {result.outcomes.map((outcome, i) => (
               <li key={i} className={outcome.passed ? "pass" : "fail"}>
                 {outcome.passed ? "✓" : "✗"} Caso {i + 1}
                 {!outcome.passed && (

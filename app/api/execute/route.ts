@@ -52,7 +52,9 @@ async function resolveWandboxCompiler(language: string): Promise<string | null> 
 
     wandboxCompilers = {};
     for (const [id, wandboxLang] of Object.entries(WANDBOX_LANGUAGE)) {
-      const compiler = list.find((c) => c.language === wandboxLang);
+      const matches = list.filter((c) => c.language === wandboxLang);
+      // Versión estable; las "head" (nightly) suelen fallar al ejecutar.
+      const compiler = matches.find((c) => !c.name.includes("head")) ?? matches[0];
       if (compiler) wandboxCompilers[id] = compiler.name;
     }
   }

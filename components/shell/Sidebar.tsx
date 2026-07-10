@@ -3,7 +3,22 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Role, useAuth } from "@/lib/auth/store";
+import { getTheme, setTheme, useTheme } from "@/lib/theme";
 import { Logo } from "./Logo";
+
+/** Interruptor de tema claro/oscuro. */
+function ThemeToggle() {
+  const theme = useTheme();
+  return (
+    <button
+      className="theme-toggle"
+      onClick={() => setTheme(getTheme() === "dark" ? "light" : "dark")}
+    >
+      <span className="nav-icon">{theme === "dark" ? "🌙" : "☀️"}</span>
+      Modo {theme === "dark" ? "oscuro" : "claro"}
+    </button>
+  );
+}
 
 interface NavItem {
   href: string;
@@ -70,14 +85,18 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
         {WORK_ITEMS[user.role].map((nav) => item(nav, true))}
       </div>
 
+      <div className="sidebar-section">CUENTA</div>
+      {item({ href: "/profile", label: "Mi Perfil", icon: "👤" })}
+      <ThemeToggle />
+
       <div className="sidebar-footer">
-        <div className="user-row">
+        <Link href="/profile" onClick={onClose} className="user-row">
           <div className="avatar">{user.initial}</div>
           <div className="user-info">
             <div className="user-name">{user.name}</div>
             <div className="user-email">{user.email}</div>
           </div>
-        </div>
+        </Link>
         <div className={`role-badge role-${user.role}`}>
           {user.role === "profesor" ? "🧑‍🏫 Profesor" : "🎒 Alumno"}
         </div>

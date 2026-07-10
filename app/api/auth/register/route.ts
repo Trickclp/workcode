@@ -1,9 +1,19 @@
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { clientIp, rateLimit } from "@/lib/server/ratelimit";
 
 /** Registro con correo/contraseña + rol (Alumno o Profesor). */
 export async function POST(request: Request) {
+  // Anti-spam: máx. 5 cuentas por IP cada 10 minutos.
+  const limit = rateLimit(`register:${clientIp(request)}`, 5, 600_000);
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: `Demasiados registros. Intenta en ${limit.retryAfterSec}s.` },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSec) } }
+    );
+  }
+
   let body: { name?: string; email?: string; password?: string; role?: string };
   try {
     body = await request.json();

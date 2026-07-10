@@ -3,6 +3,7 @@
 import Editor, { BeforeMount, OnMount } from "@monaco-editor/react";
 import { MONACO_LANGUAGE, RuntimeId } from "@/lib/runtimes";
 import { registerPseudocodeLanguage } from "@/lib/monaco/pseudocode-language";
+import { useTheme } from "@/lib/theme";
 
 const OPTIONS = {
   minimap: { enabled: false },
@@ -24,12 +25,13 @@ interface CodeEditorProps {
 }
 
 export function CodeEditor({ language, value, onChange, readOnly, onMount }: CodeEditorProps) {
+  const theme = useTheme();
   const beforeMount: BeforeMount = (monaco) => registerPseudocodeLanguage(monaco);
 
   return (
     <Editor
       language={MONACO_LANGUAGE[language]}
-      theme="vs-dark"
+      theme={theme === "light" ? "light" : "vs-dark"}
       value={value}
       beforeMount={beforeMount}
       onMount={onMount}
